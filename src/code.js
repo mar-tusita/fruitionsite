@@ -1,31 +1,50 @@
 function getId(url) {
-    try {
-        const id = new URL(url).pathname.slice(-32);
-        if (id.match(/[0-9a-f]{32}/)) return id;
-        return '';
-    } catch (e) {
-        return '';
-    }
+  try {
+    const id = new URL(url).pathname.slice(-32);
+    if (id.match(/[0-9a-f]{32}/)) return id;
+    return '';
+  } catch (e) {
+    return '';
+  }
+  try {
+    const id = new URL(url).pathname.slice(-32);
+    if (id.match(/[0-9a-f]{32}/)) return id;
+    return '';
+  } catch (e) {
+    return '';
+  }
 }
 
 export default function code(data) {
-    const {
-        myDomain,
-        notionUrl,
-        slugs,
-        pageTitle,
-        pageDescription,
-        googleFont,
-        customScript,
-    } = data;
-    let url = myDomain.replace('https://', '').replace('http://', '');
-    if (url.slice(-1) === '/') url = url.slice(0, url.length - 1);
+  const {
+    myDomain,
+    notionUrl,
+    slugs,
+    pageTitle,
+    pageDescription,
+    googleFont,
+    customScript,
+  } = data;
+  let url = myDomain.replace('https://', '').replace('http://', '');
+  if (url.slice(-1) === '/') url = url.slice(0, url.length - 1);
+  const {
+    myDomain,
+    notionUrl,
+    slugs,
+    pageTitle,
+    pageDescription,
+    googleFont,
+    customScript,
+  } = data;
+  let url = myDomain.replace('https://', '').replace('http://', '');
+  if (url.slice(-1) === '/') url = url.slice(0, url.length - 1);
 
-    return `  /* CONFIGURATION STARTS HERE */
-  
+  return `  /* CONFIGURATION STARTS HERE */
+  return `;  /* CONFIGURATION STARTS HERE */
+
   /* Step 1: enter your domain name like fruitionsite.com */
   const MY_DOMAIN = '${url}';
-  
+
   /*
    * Step 2: enter your URL slug to page ID mapping
    * The key on the left is the slug (without the slash)
@@ -33,23 +52,27 @@ export default function code(data) {
    */
   const SLUG_TO_PAGE = {
     '': '${getId(notionUrl)}',
-${slugs
-    .map(([pageUrl, notionUrl]) => {
-        const id = getId(notionUrl);
-        if (!id || !pageUrl) return '';
-        return `    '${pageUrl}': '${id}',\n`;
+    ${ slugs
+      .map(([pageUrl, notionUrl]) => {
+      .map(([pageUrl, notionUrl]) => {
+      const id = getId(notionUrl);
+      if (!id || !pageUrl) return '';
+      return `    '${pageUrl}': '${id}',\n`;
     })
-    .join('')}  };
-  
-  /* Step 3: enter your page title and description for SEO purposes */
-  const PAGE_TITLE = '${pageTitle || ''}';
-  const PAGE_DESCRIPTION = '${pageDescription || ''}';
-  
-  /* Step 4: enter a Google Font name, you can choose from https://fonts.google.com */
-  const GOOGLE_FONT = '${googleFont || ''}';
-  
-  /* Step 5: enter any custom scripts you'd like */
-  const CUSTOM_SCRIPT = \`${customScript || ''}\`;
+        .join('');
+    }  };
+      })
+      .join('')}  };
+
+/* Step 3: enter your page title and description for SEO purposes */
+const PAGE_TITLE = '${pageTitle || ''}';
+const PAGE_DESCRIPTION = '${pageDescription || ''}';
+
+/* Step 4: enter a Google Font name, you can choose from https://fonts.google.com */
+const GOOGLE_FONT = '${googleFont || ''}';
+
+/* Step 5: enter any custom scripts you'd like */
+const CUSTOM_SCRIPT = \`${customScript || ''}\`;
   
   /* CONFIGURATION ENDS HERE */
   
@@ -136,7 +159,17 @@ ${slugs
       response = new Response(response.body, response);
       response.headers.set('Access-Control-Allow-Origin', '*');
       return response;
-    } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
+    } else if (url.pathname.endsWith(".js")) {
+      response = await fetch(url.toString());
+      let body = await response.text();
+      response = new Response(
+        body,
+        response
+      );
+      response.headers.set("Content-Type", "application/x-javascript");
+      return response;
+    }
+    else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
       const pageId = SLUG_TO_PAGE[url.pathname.slice(1)];
       return Response.redirect('https://' + MY_DOMAIN + '/' + pageId, 302);
     } else {
@@ -213,7 +246,7 @@ ${slugs
       })
     }
   }
-  
+
   class BodyRewriter {
     constructor(SLUG_TO_PAGE) {
       this.SLUG_TO_PAGE = SLUG_TO_PAGE;
@@ -222,6 +255,7 @@ ${slugs
       element.append(\`<div style="display:none">Powered by <a href="http://fruitionsite.com">Fruition</a></div>
       <script>
       window.CONFIG.domainBaseUrl = location.origin;
+      localStorage.__console = true;
       const SLUG_TO_PAGE = \${JSON.stringify(this.SLUG_TO_PAGE)};
       const PAGE_TO_SLUG = {};
       const slugs = [];
