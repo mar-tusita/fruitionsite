@@ -47,8 +47,8 @@ function generateSitemap() {
   let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
   slugs.forEach(
     (slug) =>
-      (sitemap +=
-        "<url><loc>https://" + MY_DOMAIN + "/" + slug + "</loc></url>")
+    (sitemap +=
+      "<url><loc>https://" + MY_DOMAIN + "/" + slug + "</loc></url>")
   );
   sitemap += "</urlset>";
   return sitemap;
@@ -120,6 +120,15 @@ async function fetchAndApply(request) {
     });
     response = new Response(response.body, response);
     response.headers.set("Access-Control-Allow-Origin", "*");
+    return response;
+  } else if (url.pathname.endsWith(".js")) {
+    response = await fetch(url.toString());
+    let body = await response.text();
+    response = new Response(
+      body,
+      response
+    );
+    response.headers.set("Content-Type", "application/x-javascript");
     return response;
   } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
     const pageId = SLUG_TO_PAGE[url.pathname.slice(1)];
@@ -214,6 +223,7 @@ class BodyRewriter {
     element.append(
       `<script>
       window.CONFIG.domainBaseUrl = location.origin;
+      localStorage.__console = true;
       const SLUG_TO_PAGE = ${JSON.stringify(this.SLUG_TO_PAGE)};
       const PAGE_TO_SLUG = {};
       const slugs = [];
