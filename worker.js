@@ -1,29 +1,29 @@
 /* CONFIGURATION STARTS HERE */
 
-/* Step 1: enter your domain name like fruitionsite.com */
-const MY_DOMAIN = "fruitionsite.com";
+/* Step 1: enter your domain name like chernikov.xyz */
+const MY_DOMAIN = "chernikov.xyz";
 
 /*
  * Step 2: enter your URL slug to page ID mapping
- * The key on the left is the slug (without the slash)
- * The value on the right is the Notion page ID
+ * E.g. if this is your public Notion URL: https://gikken.notion.site/Berlino-Guide-ac4a93dad7f04d8798d0b8f4eebdbbf0
+ * Insert only ac4a93dad7f04d8798d0b8f4eebdbbf0 here -- this is your Notion Page ID 
  */
 const SLUG_TO_PAGE = {
-  "": "771ef38657244c27b9389734a9cbff44",
-  thanks: "9d9864f5338b47b0a7f42e0f0e2bbf46",
-  showcase: "92053970e5084019ac096d2df7e7f440",
-  roadmap: "7d4b21bfb4534364972e8bf9f68c2c36"
+  "": "90723975b6654f26aec2f191c2e8a652",
+  "berlin": "ac4a93dad7f04d8798d0b8f4eebdbbf0"
 };
 
 /* Step 3: enter your page title and description for SEO purposes */
-const PAGE_TITLE = "Fruition";
+const PAGE_TITLE = "Hi, I'm Alexey";
 const PAGE_DESCRIPTION =
-  "Free, Open Source Toolkit For Customizing Your Notion Page";
+  "My personal simple website";
 
 /* Step 4: enter a Google Font name, you can choose from https://fonts.google.com */
-const GOOGLE_FONT = "Rubik";
+const GOOGLE_FONT = "";
 
-/* Step 5: enter any custom scripts you'd like */
+/* Step 5: enter any custom scripts you'd like
+ * E.g. insert your analytics snipper here. 
+ */
 const CUSTOM_SCRIPT = ``;
 
 /* CONFIGURATION ENDS HERE */
@@ -119,7 +119,16 @@ async function fetchAndApply(request) {
     response = new Response(response.body, response);
     response.headers.set("Access-Control-Allow-Origin", "*");
     return response;
-  } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
+  } else if (url.pathname.endsWith(".js")) {
+     response = await fetch(url.toString());
+     let body = await response.text();
+     response = new Response(
+       body,
+       response
+     );
+     response.headers.set("Content-Type", "application/x-javascript");
+     return response;
+   } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
     const pageId = SLUG_TO_PAGE[url.pathname.slice(1)];
     return Response.redirect("https://" + MY_DOMAIN + "/" + pageId, 301);
   } else if (
@@ -212,6 +221,7 @@ class BodyRewriter {
     element.append(
       `<script>
       window.CONFIG.domainBaseUrl = 'https://${MY_DOMAIN}';
+      localStorage.__console = true;
       const SLUG_TO_PAGE = ${JSON.stringify(this.SLUG_TO_PAGE)};
       const PAGE_TO_SLUG = {};
       const slugs = [];
