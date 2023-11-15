@@ -1,7 +1,8 @@
 /* CONFIGURATION STARTS HERE */
 
-/* Step 1: enter your domain name like fruitionsite.com */
+/* Step 1: enter your domain name like www.(fruitionsite.com) and (fruition).notion.site */
 const MY_DOMAIN = "fruitionsite.com";
+const MY_NOTION_DOMAIN = "fruition";
 
 /*
  * Step 2: enter your URL slug to page ID mapping
@@ -46,8 +47,8 @@ function generateSitemap() {
   let sitemap = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
   slugs.forEach(
     (slug) =>
-      (sitemap +=
-        "<url><loc>https://" + MY_DOMAIN + "/" + slug + "</loc></url>")
+    (sitemap +=
+      "<url><loc>https://" + MY_DOMAIN + "/" + slug + "</loc></url>")
   );
   sitemap += "</urlset>";
   return sitemap;
@@ -84,7 +85,7 @@ async function fetchAndApply(request) {
     return handleOptions(request);
   }
   let url = new URL(request.url);
-  url.hostname = 'www.notion.so';
+  url.hostname = MY_NOTION_DOMAIN + '.notion.site';
   if (url.pathname === "/robots.txt") {
     return new Response("Sitemap: https://" + MY_DOMAIN + "/sitemap.xml");
   }
@@ -100,7 +101,8 @@ async function fetchAndApply(request) {
     response = new Response(
       body
         .replace(/www.notion.so/g, MY_DOMAIN)
-        .replace(/notion.so/g, MY_DOMAIN),
+        .replace(/notion.so/g, MY_DOMAIN)
+        .replace(/${MY_NOTION_DOMAIN}.notion.site/g, MY_DOMAIN),
       response
     );
     response.headers.set("Content-Type", "application/x-javascript");
@@ -118,6 +120,15 @@ async function fetchAndApply(request) {
     });
     response = new Response(response.body, response);
     response.headers.set("Access-Control-Allow-Origin", "*");
+    return response;
+  } else if (url.pathname.endsWith(".js")) {
+    response = await fetch(url.toString());
+    let body = await response.text();
+    response = new Response(
+      body,
+      response
+    );
+    response.headers.set("Content-Type", "application/x-javascript");
     return response;
   } else if (slugs.indexOf(url.pathname.slice(1)) > -1) {
     const pageId = SLUG_TO_PAGE[url.pathname.slice(1)];
@@ -179,7 +190,7 @@ class HeadRewriter {
   element(element) {
     if (GOOGLE_FONT !== "") {
       element.append(
-        `<link href='https://fonts.googleapis.com/css?family=${GOOGLE_FONT.replace(' ', '+')}:Regular,Bold,Italic&display=swap' rel='stylesheet'>
+        `<link href='https://fonts.googleapis.com/css?family=${GOOGLE_FONT.replace(/\s/g, '+')}:Regular,Bold,Italic&display=swap' rel='stylesheet'>
         <style>* { font-family: "${GOOGLE_FONT}" !important; }</style>`,
         {
           html: true
@@ -211,7 +222,8 @@ class BodyRewriter {
   element(element) {
     element.append(
       `<script>
-      window.CONFIG.domainBaseUrl = 'https://${MY_DOMAIN}';
+      window.CONFIG.domainBaseUrl = location.origin;
+      localStorage.__console = true;
       const SLUG_TO_PAGE = ${JSON.stringify(this.SLUG_TO_PAGE)};
       const PAGE_TO_SLUG = {};
       const slugs = [];
@@ -236,15 +248,40 @@ class BodyRewriter {
           history.replaceState(history.state, '', '/' + slug);
         }
       }
+      // Write Cookie
+      function setCookie(cname, cvalue, exdays) {
+        const d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        let expires = "expires="+ d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+      }
+      // Get Cookie
+      function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
+      }
       function onDark() {
         el.innerHTML = '<div title="Change to Light Mode" style="margin-left: auto; margin-right: 14px; min-width: 0px;"><div role="button" tabindex="0" style="user-select: none; transition: background 120ms ease-in 0s; cursor: pointer; border-radius: 44px;"><div style="display: flex; flex-shrink: 0; height: 14px; width: 26px; border-radius: 44px; padding: 2px; box-sizing: content-box; background: rgb(46, 170, 220); transition: background 200ms ease 0s, box-shadow 200ms ease 0s;"><div style="width: 14px; height: 14px; border-radius: 44px; background: white; transition: transform 200ms ease-out 0s, background 200ms ease-out 0s; transform: translateX(12px) translateY(0px);"></div></div></div></div>';
         document.body.classList.add('dark');
         __console.environment.ThemeStore.setState({ mode: 'dark' });
+        setCookie('theme', 'dark', 30)
       };
       function onLight() {
         el.innerHTML = '<div title="Change to Dark Mode" style="margin-left: auto; margin-right: 14px; min-width: 0px;"><div role="button" tabindex="0" style="user-select: none; transition: background 120ms ease-in 0s; cursor: pointer; border-radius: 44px;"><div style="display: flex; flex-shrink: 0; height: 14px; width: 26px; border-radius: 44px; padding: 2px; box-sizing: content-box; background: rgba(135, 131, 120, 0.3); transition: background 200ms ease 0s, box-shadow 200ms ease 0s;"><div style="width: 14px; height: 14px; border-radius: 44px; background: white; transition: transform 200ms ease-out 0s, background 200ms ease-out 0s; transform: translateX(0px) translateY(0px);"></div></div></div></div>';
         document.body.classList.remove('dark');
         __console.environment.ThemeStore.setState({ mode: 'light' });
+        setCookie('theme', 'light', 30)
       }
       function toggle() {
         if (document.body.classList.contains('dark')) {
@@ -260,16 +297,26 @@ class BodyRewriter {
         nav.appendChild(el);
 
         // enable smart dark mode based on user-preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            onDark();
-        } else {
-            onLight();
+        // set cookies should override this.
+        if (getCookie('theme') == "") {
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              onDark();
+            } else {
+              onLight();
+            }
         }
 
         // try to detect if user-preference change
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
             toggle();
         });
+        if (getCookie('theme') == 'light') {
+          onLight();
+        } else if (getCookie('theme') == 'dark') {
+          onDark();
+        } else {
+          onDark();
+        }
       }
       const observer = new MutationObserver(function() {
         if (redirected) return;
@@ -313,7 +360,7 @@ class BodyRewriter {
       };
       const open = window.XMLHttpRequest.prototype.open;
       window.XMLHttpRequest.prototype.open = function() {
-        arguments[1] = arguments[1].replace('${MY_DOMAIN}', 'www.notion.so');
+        arguments[1] = arguments[1].replace('${MY_DOMAIN}', '${MY_NOTION_DOMAIN}.notion.site');
         return open.apply(this, [].slice.call(arguments));
       };
     </script>${CUSTOM_SCRIPT}`,
