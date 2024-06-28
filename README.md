@@ -1,11 +1,12 @@
 # Fruition: Free, Open Source Toolkit For Customizing Your Notion Pages
 
-* Use cases: perfect for your portfolio, blog, landing page, and business site
-* Features: pretty URLs, custom domains, Google Fonts, SEO support, script injection
-* Benefits: completely free, no lock-in, and open source
+Here's how you can deploy a fully working website in just a few minutes:
 
-For step-by-step setup instructions, visit https://fruitionsite.com
-
-This repo has 2 independent parts:
-1. [worker.js](https://github.com/stephenou/fruitionsite/blob/master/worker.js) is the Cloudflare Worker script
-2. everything else is a React app that helps generate the Worker script via a UI.
+1. Create a Notion page and publish it for the web 
+2. Register a domain name with @cloudflare
+3. Your new domain → Workers Routes → Manage Workers → Create Application → Create Worker → Deploy
+4. Replace the boilerplate code with this script: https://github.com/chernikovalexey/notion-site/blob/master/worker.js
+5. Adjust the slugs as well as page title and description
+6. Save and Deploy
+7. Click Triggers → Add Custom Domain → type in the domain name you've just bought 
+8. You‘re live!
