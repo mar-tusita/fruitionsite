@@ -8,5 +8,5 @@ Here's how you can deploy a fully working website in just a few minutes:
 4. Replace the boilerplate code with this script: https://github.com/chernikovalexey/notion-site/blob/master/worker.js
 5. Adjust the slugs as well as page title and description
 6. Save and Deploy
-7. Click Triggers → Add Custom Domain → type in the domain name you've just bought 
+7. Select your new worker → Settings → Triggers → Add Custom Domain → type in the domain name you've just bought 
 8. You‘re live!
