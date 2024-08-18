@@ -10,3 +10,5 @@ Here's how you can deploy a fully working website in just a few minutes:
 6. Save and Deploy
 7. Select your new worker → Settings → Triggers → Add Custom Domain → type in the domain name you've just bought 
 8. You‘re live!
+
+Examples: [chernikov.xyz](https://chernikov.xyz), [ultrawidevideo.com](https://ultrawidevideo.com), [nocookiebanners.com](https://nocookiebanners.com)
